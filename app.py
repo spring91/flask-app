@@ -4,6 +4,7 @@ app = Flask(__name__)
 
 # Anonymous vote counter
 votes = {"yes": 0, "no": 0}
+voters = set()  # To track unique voters
 vote_limit = 4
 
 @app.route('/')
@@ -14,11 +15,14 @@ def home():
 @app.route('/vote', methods=['POST'])
 def vote():
     """Handle voting and return results when the limit is reached."""
-    global votes
+    global votes, voters
 
-    # Check if the vote limit has been reached
-    if sum(votes.values()) >= vote_limit:
-        return jsonify({"message": "Voting is closed.", "result": calculate_result()})
+    # Get the IP address of the user
+    user_id = request.remote_addr
+
+    # Check if the user has already voted
+    if user_id in voters:
+        return jsonify({"message": "You have already voted."}), 403
 
     # Process the vote
     data = request.json
@@ -26,15 +30,18 @@ def vote():
     if vote not in ["yes", "no"]:
         return jsonify({"error": "Invalid vote. Only 'yes' or 'no' allowed."}), 400
 
+    # Register the vote
     votes[vote] += 1
+    voters.add(user_id)
 
-    # Check again after vote if the limit is reached
+    # Check if the vote limit has been reached
     if sum(votes.values()) >= vote_limit:
         result = calculate_result()
         votes = {"yes": 0, "no": 0}  # Reset votes for future use
+        voters.clear()  # Reset voter tracking
         return jsonify({"message": "Voting is closed.", "result": result})
 
-    return jsonify({"message": "Vote received."})
+    return jsonify({"message": "Vote received. Waiting for more votes."})
 
 def calculate_result():
     """Calculate and return the result."""
