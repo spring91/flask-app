@@ -2,10 +2,10 @@ from flask import Flask, request, render_template, jsonify
 
 app = Flask(__name__)
 
-# Anonymous vote counter
+# Vote tracking
 votes = {"yes": 0, "no": 0}
-voters = set()  # To track unique voters
-vote_limit = 4
+voters = set()  # Track unique voters
+vote_limit = 4  # Number of unique votes to trigger results
 
 @app.route('/')
 def home():
@@ -17,7 +17,7 @@ def vote():
     """Handle voting and return results when the limit is reached."""
     global votes, voters
 
-    # Get the IP address of the user
+    # Identify the voter using their IP address
     user_id = request.remote_addr
 
     # Check if the user has already voted
@@ -35,7 +35,7 @@ def vote():
     voters.add(user_id)
 
     # Check if the vote limit has been reached
-    if sum(votes.values()) >= vote_limit:
+    if len(voters) >= vote_limit:
         result = calculate_result()
         votes = {"yes": 0, "no": 0}  # Reset votes for future use
         voters.clear()  # Reset voter tracking
@@ -45,9 +45,9 @@ def vote():
 
 def calculate_result():
     """Calculate and return the result."""
-    if votes["no"] > 0:
+    if votes["no"] > 0:  # Any "no" vote triggers a "no" result
         return "no"
-    return "yes"
+    return "yes"  # All "yes" votes otherwise result in "yes"
 
 if __name__ == "__main__":
     app.run(debug=True)
