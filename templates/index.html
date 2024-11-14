@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .button {
+            font-size: 1.5em;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .yes-button {
+            background-color: #4caf50;
+            color: white;
+        }
+        .yes-button:hover {
+            background-color: #45a049;
+        }
+        .no-button {
+            background-color: #f44336;
+            color: white;
+        }
+        .no-button:hover {
+            background-color: #d32f2f;
+        }
+        .message {
+            margin-top: 30px;
+            font-size: 1.8em;
+            color: #333;
+        }
+        .final-result {
+            font-weight: bold;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vote: Yes or No</h1>
+    <button class="button yes-button" onclick="submitVote('yes')">Yes</button>
+    <button class="button no-button" onclick="submitVote('no')">No</button>
+    <div class="message" id="message">Waiting for votes...</div>
+
+    <script>
+        function submitVote(vote) {
+            fetch('/vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vote: vote })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('message');
+                if (data.result) {
+                    messageDiv.innerHTML = `<span class="final-result">Result: ${data.result.toUpperCase()}</span>`;
+                } else {
+                    messageDiv.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'An error occurred. Please try again.';
+            });
+        }
+    </script>
+</body>
+</html>
